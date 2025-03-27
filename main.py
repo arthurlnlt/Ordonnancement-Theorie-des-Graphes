@@ -1,7 +1,5 @@
 from functions import *
 
-
-# Exemple d'utilisation
 tableau = lecture_tableau('test.txt')
 if tableau:
     matrice = creer_matrice_adjacence(tableau)
