@@ -1,7 +1,5 @@
 from tabulate import tabulate
 
-
-
 def lecture_tableau(fichier):
     tableau = []
     try:
@@ -26,13 +24,9 @@ def lecture_tableau(fichier):
         return tableau
 
     except FileNotFoundError:
-        print(f"Le fichier {fichier} n'a pas été trouvé.")
         return None
     except Exception as e:
-        print(f"Une erreur s'est produite : {e}")
         return None
-
-
 
 def creer_matrice_adjacence(tableau):
     N = len(tableau)
@@ -45,13 +39,9 @@ def creer_matrice_adjacence(tableau):
         for predecesseur in tache['predecesseurs']:
             matrice[predecesseur][numero_tache] = 1
 
-
-
     return matrice
 
-
-
-def afficher_matrice(matrice):
+def afficher_matrice(matrice, f):
     N = len(matrice) - 2
     # Créer les en-têtes de colonnes
     en_tetes_colonnes = ["α"] + [f"Tâche {i}" for i in range(1, N + 1)] + ["ω"]
@@ -63,8 +53,9 @@ def afficher_matrice(matrice):
     table = [en_tetes_colonnes] + [[en_tetes_lignes[i]] + ligne for i, ligne in enumerate(matrice)]
 
     # Afficher la matrice avec tabulate
-    print(tabulate(table, headers="firstrow", tablefmt="grid"))
-
+    message = tabulate(table, headers="firstrow", tablefmt="grid") + "\n"
+    print(message)
+    f.write(message)
 
 def ajouter_alpha_omega(tableau):
     # Identifier les tâches sans prédécesseurs
@@ -98,20 +89,29 @@ def ajouter_alpha_omega(tableau):
 
     return tableau
 
-
-def verification_graphe(tableau):
+def verification_graphe(tableau, f):
     """Vérifie que le graphe peut servir pour l'ordonnancement."""
     # Vérification des arcs négatifs
-    print("* Vérification des arcs négatifs")
+    message = "* Vérification des arcs négatifs\n"
+    print(message)
+    f.write(message)
     for tache in tableau:
         if tache['duree'] < 0:
-            print("-> Le graphe contient au moins un arc à valeur négative")
+            message = "-> Le graphe contient au moins un arc à valeur négative\n"
+            print(message)
+            f.write(message)
             return False
-    print("-> Le graphe ne contient pas d'arc à valeur négative\n")
+    message = "-> Le graphe ne contient pas d'arc à valeur négative\n\n"
+    print(message)
+    f.write(message)
 
     # Détection de circuit
-    print("* Détection de circuit")
-    print("* Méthode d’élimination des points d’entrée\n")
+    message = "* Détection de circuit\n"
+    print(message)
+    f.write(message)
+    message = "* Méthode d’élimination des points d’entrée\n\n"
+    print(message)
+    f.write(message)
 
     # Créer une copie des contraintes
     contraintes_copie = {t['numero_tache']: list(t['predecesseurs']) for t in tableau}
@@ -121,11 +121,17 @@ def verification_graphe(tableau):
         # Trouver les points d'entrée (sommets sans prédécesseurs)
         points_entree = [s for s in sommets if len(contraintes_copie[s]) == 0]
         if not points_entree:
-            print("\n-> Il y a un circuit")
+            message = "\n-> Il y a un circuit\n"
+            print(message)
+            f.write(message)
             return False
 
-        print("Points d'entrée :", " ".join(map(str, points_entree)))
-        print("Suppression des points d'entrée")
+        message = "Points d'entrée : " + " ".join(map(str, points_entree)) + "\n"
+        print(message)
+        f.write(message)
+        message = "Suppression des points d'entrée\n"
+        print(message)
+        f.write(message)
 
         # Supprimer les points d'entrée
         for s in points_entree:
@@ -137,13 +143,20 @@ def verification_graphe(tableau):
             contraintes_copie[s] = [p for p in contraintes_copie[s] if p not in points_entree]
 
         if sommets:
-            print("Sommets restant :", " ".join(map(str, sorted(sommets))))
-            print("")
+            message = "Sommets restant : " + " ".join(map(str, sorted(sommets))) + "\n\n"
+            print(message)
+            f.write(message)
         else:
-            print("Sommets restant : Aucun")
+            message = "Sommets restant : Aucun\n"
+            print(message)
+            f.write(message)
 
-    print("\n-> Il n’y a pas de circuit")
-    print("-> C'est un graphe d'ordonnancement")
+    message = "\n-> Il n’y a pas de circuit\n"
+    print(message)
+    f.write(message)
+    message = "-> C'est un graphe d'ordonnancement\n"
+    print(message)
+    f.write(message)
     return True
 
 def calculer_rangs(tableau):
@@ -190,8 +203,6 @@ def calculer_rangs(tableau):
     ordre_topo = [sommet for sommet, _ in sommets_tries]
     return rangs, ordre_topo
 
-
-
 def calcul_calendrier(tableau):
     """Calcule les dates au plus tôt et au plus tard en se basant sur les rangs calculés."""
     nb_taches = len(tableau)
@@ -228,8 +239,7 @@ def calcul_calendrier(tableau):
 
     return temps_tot, temps_tar
 
-
-def afficher_resultats(tableau, temps_tot, temps_tar, rangs, ordre_topo):
+def afficher_resultats(tableau, temps_tot, temps_tar, rangs, ordre_topo, f):
     # Créer une liste des durées des tâches
     durees = [tache['duree'] for tache in tableau]
 
@@ -266,9 +276,10 @@ def afficher_resultats(tableau, temps_tot, temps_tar, rangs, ordre_topo):
         ])
     # Afficher les résultats avec tabulate
     headers = ["Rang", "Sommet", "Date au + tôt", "Date au + tard", "Marge totale"]
-    print(tabulate(resultats, headers=headers, tablefmt="grid"))
+    message = tabulate(resultats, headers=headers, tablefmt="grid") + "\n"
+    print(message)
+    f.write(message)
     return marge_totale
-
 
 def chemin_critique(tableau, temps_tot, marge_totale):
     final_node = len(tableau) - 1
@@ -315,5 +326,4 @@ def chemin_critique(tableau, temps_tot, marge_totale):
             critical_paths.append(path)
     # Formatage de l'affichage : un chemin par ligne avec les nœuds séparés par " -> "
     formatted_paths = ["• " + " -> ".join(map(str, path)) for path in critical_paths]
-    return "\n".join(formatted_paths)
-
+    return "\n".join(formatted_paths) + "\n"
